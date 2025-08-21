@@ -25,7 +25,7 @@
 
 import os
 
-from qgis.PyQt.QtCore import QRegExp
+from qgis.PyQt.QtCore import QRegularExpression
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.gui import QgsProjectionSelectionWidget,QgsFileWidget
@@ -48,7 +48,7 @@ class GeorefExtensionDialog(QDialog):
         self.resize(500,350)
         layout = QVBoxLayout(self)
         hlayout = QHBoxLayout()
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.editDataSource = QLineEdit()
         self.editDataSource.setPlaceholderText('Press "Refresh" to reset the Datasource')
         self.btnRefresh = QPushButton("Refresh")
@@ -56,14 +56,14 @@ class GeorefExtensionDialog(QDialog):
         self.lblDataSource.setOpenExternalLinks(True)
         self.lblDataSource.setBuddy(self.editDataSource)
         self.editFileName = QgsFileWidget(self)
-        self.editFileName.setStorageMode(3)
+        self.editFileName.setStorageMode(QgsFileWidget.StorageMode.SaveFile)
         self.editFileName.lineEdit().setEnabled(False)
         self.lblFileName = QLabel('&Output File:')
         self.lblFileName.setBuddy(self.editFileName)
         self.editNodata = QLineEdit()
-        regex = QRegExp(r'[-]{0,1}\d+')
+        regex = QRegularExpression(r'[-]{0,1}\d+')
         #self.editNodata.setPlaceholderText('-9999')
-        self.editNodata.setValidator(QRegExpValidator(regex))
+        self.editNodata.setValidator(QRegularExpressionValidator(regex))
         self.lblNodata = QLabel('&NoData Value:')
         self.lblNodata.setBuddy(self.editNodata)
         self.editWkt = QPlainTextEdit()

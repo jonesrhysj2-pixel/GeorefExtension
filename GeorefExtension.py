@@ -22,22 +22,18 @@
  *                                                                         *
  ***************************************************************************/
 """
-#import debugpy
-#debugpy.configure(python='C:/OSGeo4W/apps/Python312/python.exe')
-#debugpy.listen(('0.0.0.0',5678))
+import os, gc, tempfile, re, pathlib
+from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QObject, QAbstractItemModel
+from qgis.PyQt.QtCore import (QSettings, QTranslator, QCoreApplication, QObject, QAbstractItemModel)
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QMainWindow, QGraphicsView, QDialogButtonBox, QWidget, QToolBar, QMessageBox, QDialog
+from qgis.PyQt.QtWidgets import (QAction, QMainWindow, QGraphicsView, QDialogButtonBox, QWidget, QToolBar, QMessageBox, QDialog)
 from qgis.PyQt.QtXml import *
-
-from qgis.gui import QgsColorDialog, QgsMapCanvas, QgsMessageBar
-from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsProject, QgsReadWriteContext, QgsMapLayerType, QgsRasterLayer, QgsSettings 
-
+from qgis.gui import (QgsColorDialog, QgsMapCanvas, QgsMessageBar)
+from qgis.core import(Qgis, QgsCoordinateReferenceSystem, QgsProject, QgsReadWriteContext, QgsMapLayerType, QgsRasterLayer, QgsSettings) 
 
 # Import the code for the dialog
 from .GeorefExtension_dialog import GeorefExtensionDialog
-import os, gc, tempfile, re, pathlib
 
 from osgeo import osr,gdal,ogr
 gdal.SetConfigOption('GDAL_CACHEMAX','1024')
@@ -101,30 +97,27 @@ class GeorefExtension:
     def addButtons(self):
         self.gui = self.iface.mainWindow().findChild(QMainWindow,'QgsGeorefPluginGuiBase')
         if self.gui:
-            #self.toolBarFile = self.gui.findChild(QObject,'toolBarFile')
-            #if self.toolBarFile:
-                #self.toolBarFile.addSeparator()
-                self.extToolBar = QToolBar("Georef-Extension")
-                self.extToolBar.setMovable(True)
-                self.gui.addToolBar(self.extToolBar)
-                icon = QIcon(self.plugin_dir+"/icons/color.svg")
-                self.setBgColorAction = QAction(icon,"Set Backgound Color",self.extToolBar)
-                self.setBgColorAction.triggered.connect(self.setGeorefBackgroundColor)
-                self.extToolBar.addAction(self.setBgColorAction)
-                icon = QIcon(self.plugin_dir+"/icons/delete.svg")
-                self.delAllGCPsAction = QAction(icon,"Delete all GCPs",self.extToolBar)
-                self.delAllGCPsAction.triggered.connect(self.deleteAllGCPs)
-                self.extToolBar.addAction(self.delAllGCPsAction)
-                icon = QIcon(self.plugin_dir+"/icons/go.svg")
-                self.tranformAndSaveAction = QAction(icon,"Create Virtual Raster",self.extToolBar)
-                self.tranformAndSaveAction.triggered.connect(self.transformAndSave)
-                self.extToolBar.addAction(self.tranformAndSaveAction)
+            self.extToolBar = QToolBar("Georef-Extension")
+            self.extToolBar.setMovable(True)
+            self.gui.addToolBar(self.extToolBar)
+            icon = QIcon(self.plugin_dir+"/icons/color.svg")
+            self.setBgColorAction = QAction(icon,"Set Backgound Color",self.extToolBar)
+            self.setBgColorAction.triggered.connect(self.setGeorefBackgroundColor)
+            self.extToolBar.addAction(self.setBgColorAction)
+            icon = QIcon(self.plugin_dir+"/icons/delete.svg")
+            self.delAllGCPsAction = QAction(icon,"Delete all GCPs",self.extToolBar)
+            self.delAllGCPsAction.triggered.connect(self.deleteAllGCPs)
+            self.extToolBar.addAction(self.delAllGCPsAction)
+            icon = QIcon(self.plugin_dir+"/icons/go.svg")
+            self.tranformAndSaveAction = QAction(icon,"Create Virtual Raster",self.extToolBar)
+            self.tranformAndSaveAction.triggered.connect(self.transformAndSave)
+            self.extToolBar.addAction(self.tranformAndSaveAction)
 
-                canvas = self.iface.mainWindow().findChild(QgsMapCanvas,'georefCanvas')
-                canvas.layersChanged.connect(self.getRasterParameters)
+            canvas = self.iface.mainWindow().findChild(QgsMapCanvas,'georefCanvas')
+            canvas.layersChanged.connect(self.getRasterParameters)
 
-                action = self.iface.mainWindow().findChild(QAction, 'mActionShowGeoreferencer')
-                action.triggered.disconnect(self.addButtons)
+            action = self.iface.mainWindow().findChild(QAction, 'mActionShowGeoreferencer')
+            action.triggered.disconnect(self.addButtons)
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -344,10 +337,12 @@ class GeorefExtension:
             #canvas.refresh()
 
     def refreshLayer(self, destFile, hasAlpha):
+        # make destFile read-only
+        os.chmod(destFile, S_IREAD|S_IRGRP|S_IROTH)
+        
         canvas = self.iface.mapCanvas()
         for layer in (lay for i,lay in QgsProject.instance().mapLayers().items() if lay.type() == QgsMapLayerType.RasterLayer):
-            if pathlib.Path(layer.publicSource()).resolve() == pathlib.Path(destFile).resolve():
-                
+            if pathlib.Path(layer.publicSource()).resolve() == pathlib.Path(destFile).resolve():           
                 # create temporary layer to force QGIS adding statistics to VRT file, else we will eventually loose a possible cutline
                 tempLayer =  QgsRasterLayer(destFile,"temp", 'gdal')
                 tempLayer.reload()
@@ -372,7 +367,7 @@ class GeorefExtension:
         destFile = self.dlg.getFileName().lower().replace('\\','/')
         if not(os.access(os.path.dirname(destFile), os.W_OK)):
             self.dlg.lblMessage.setText('Invalid Output file!')
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
             return
 
 
@@ -380,9 +375,9 @@ class GeorefExtension:
         srcFile = self.checkSourceFile(self.getSrcFileWithOpenOptions(layer.source())[0].lower().replace('\\','/'))
         if srcFile == destFile:
             self.dlg.lblMessage.setText('Output file must not match Source file!')
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         else:
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def updateDialog(self,layer):
         src = self.getSrcFileWithOpenOptions(layer.source())
@@ -423,7 +418,7 @@ class GeorefExtension:
 
         self.updateDialog(layer)
 
-        if self.dlg.exec_():
+        if self.dlg.exec():
             srcFile,openParams = self.updateDialog(layer)
 
             if not srcFile:
@@ -485,6 +480,10 @@ class GeorefExtension:
             new_options = '-co NUM_THREADS=ALL_CPUS -of VRT -t_srs '+targetSRS+' '
             dst_ds = None
             if destFile:
+                # check if destFile exists and make writable
+                if os.path.exists(destFile):
+                  os.chmod(destFile, S_IWUSR|S_IREAD)
+
                 noData = self.dlg.getNodata()
                 if noData != '':
                     new_options += '-dstnodata '+noData+' '
