@@ -28,7 +28,7 @@ from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 from qgis.PyQt.QtCore import (QSettings, QTranslator, QCoreApplication, QObject, QAbstractItemModel)
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (QAction, QMainWindow, QGraphicsView, QDialogButtonBox, QWidget, QToolBar, QMessageBox, QDialog)
-from qgis.PyQt.QtXml import *
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.gui import (QgsColorDialog, QgsMapCanvas, QgsMessageBar)
 from qgis.core import(Qgis, QgsCoordinateReferenceSystem, QgsProject, QgsReadWriteContext, QgsMapLayerType, QgsRasterLayer, QgsSettings) 
 
@@ -183,7 +183,7 @@ class GeorefExtension:
         return float('%s.%s' % (re.sub(r'[^\d-]','',re.sub(r'(.+)[,.]\d+$',r'\1',txt)),re.search('(\d+)$',txt)[0]))
 
     def disableOkButton(self):
-        self.dlg.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
     def updateDataSource(self):
         canvas = self.iface.mainWindow().findChild(QgsMapCanvas,'georefCanvas')
@@ -210,7 +210,7 @@ class GeorefExtension:
         else:
             self.dlg.editDataSource.setText(self.canvas.layers()[0].source())
             self.dlg.lblMessage.setText("")
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
             return ''
     
     def getSrcFileWithOpenOptions(self,src):

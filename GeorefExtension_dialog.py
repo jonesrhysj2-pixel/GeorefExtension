@@ -26,8 +26,18 @@
 import os
 
 from qgis.PyQt.QtCore import QRegularExpression
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtGui import QRegularExpressionValidator
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QDialogButtonBox,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+    QPlainTextEdit,
+    QCheckBox,
+)
 from qgis.gui import QgsProjectionSelectionWidget,QgsFileWidget
 from osgeo import ogr
 

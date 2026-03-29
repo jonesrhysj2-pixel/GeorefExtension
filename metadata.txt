@@ -2,9 +2,9 @@
 
 [general]
 name=Georeferencer Extension
-qgisMinimumVersion=3.0
+qgisMinimumVersion=4.0
 supportsQt6=True
-description=Extension to the QGIS 3.x Raster Georeferencer
+description=Extension to the QGIS Raster Georeferencer
 version=3.0.9
 author=Christoph Candido
 email=christoph.candido@gmx.at
